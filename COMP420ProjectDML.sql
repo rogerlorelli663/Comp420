@@ -52,10 +52,10 @@ delimiter ;
 delimiter //
 create procedure new_game(in title varchar(30), pub varchar(30), dev varchar(30), esrb varchar(3), price float, discount float, release_date date, max_spec varchar(250), min_spec varchar(250))
 BEGIN
-DECLARE p,d char(9);
+DECLARE p,d int;
 SELECT PUBLISHER_ID into p from publisher where pub = p_company_name;
 Select developer_id into d from developer where dev = d_company_name;
-insert into game values (p,d,title,esrb,price,discount,release_date, max_spec, min_spec, 0);
+insert into game values (null,p,d,title,esrb,price,discount,release_date, max_spec, min_spec, 0);
 END //
 delimiter ;
 
@@ -207,16 +207,24 @@ delimiter ;
 
 -- views
 
+-- 
+
 CREATE VIEW BasicGameListStore AS SELECT game_id, g_title, g_esrb, g_price, g_avg_rating from game;
 
 CREATE VIEW BasicGameListCollection as select game_id, g_title from game;
 
 -- removes personal information that other players do not need to be able to see
-create view BasicCustInfo as select cust_alias from customer; 
+create view BasicCustInfo as select cust_id, cust_alias from customer; 
 
-create view FriendInfo as select cust_alias, cust_email from customer;
+create view FriendInfo as select cust_alias, steam_alias, epic_alias, uplay_alias, gog_alias, ea_alias from customer;
 
 create view TrueNameFriendInfo as select cust_fname, cust_lname, cust_alias, cust_email from customer;
+
+
+create view GameTagList as SELECT game_id, g_title, GROUP_CONCAT(tag_name) as "tags" 
+FROM game 
+join game_tag using (game_id)
+join tag using(tag_code)GROUP BY game_id;
 
 -- testing 
 INSERT INTO customer values(null,'Roger','Lorelli','kain525','roger.lorelli@yahoo.com');
@@ -231,5 +239,23 @@ call create_message(1, "dude, where's my car?",null);
 
 call send_message(1,2);
 
+call create_publisher("BUNGIE",null,null,null);
+call create_developer("BUNGIE",null,null,null);
+call new_game("DESTINY 2","BUNGIE","BUNGIE","T",29.99,0, "2019-10-01", null,null);
+call new_game("DESTINY" , "ACTIVISION","BUNGIE","T",0,0, "2017-10-01",null,null);
+
+select * from gametaglist;
+
+insert into tag values (null, "Action");
+insert into tag values (null, "Adventure");
+insert into tag values (null, "RPG");
+insert into tag values (null, "Crafting");
+insert into tag values (null, "Strategy");
+
+insert into game_tag values(1,2);
+insert into game_tag values(3,2);
+insert into game_tag values(4,2);
+
+select * from game_tag;
 select * from recipient;
 select * from message;
