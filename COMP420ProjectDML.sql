@@ -1,4 +1,4 @@
-use comp420project;
+-- use comp420project;
 
 
 -- procedures
@@ -7,13 +7,25 @@ use comp420project;
 delimiter //
 create procedure create_cust_account (in fname varchar(15), lname varchar(15), alias varchar(15), email varchar(50))
 BEGIN
-insert into customer values(null, fname, lname, alias, email);
+insert into customer values(null, fname, lname, alias, '', '', '', '', '',email);
+END //
+delimiter ;
+
+-- link account to platform
+delimiter //
+create procedure link_account(in cust_id int, platform varchar(10), alias varchar(15))
+BEGIN
+declare l_sql_stmt varchar(1000);
+Set l_sql_stmt = CONCAT('UPDATE customer SET ' + platform + ' = ' + alias + ' where customer.cust_id = ' + cust_id);
+prepare stmt from @l_sql_stmt;
+execute stmt;
+DEALLOCATE PREPARE stmt;
 END //
 delimiter ;
 
 -- create new publisher entry
 delimiter //
-create procedure create_publisher (in company_name varchar(30), rep_phone varchar(10), rep_email varchar(50), company_website varchar(50))
+create procedure create_publisher (in company_name varchar(100), rep_phone varchar(12), rep_email varchar(50), company_website varchar(50))
 BEGIN
 insert into publisher values(null, company_name, rep_phone, rep_email, company_website);
 END //
@@ -21,7 +33,7 @@ delimiter ;
 
 -- create new developer entry
 delimiter //
-create procedure create_developer (in company_name varchar(30), rep_phone varchar(10), rep_email varchar(50), company_website varchar(50))
+create procedure create_developer (in company_name varchar(100), rep_phone varchar(12), rep_email varchar(50), company_website varchar(50))
 BEGIN
 insert into developer values(null, company_name, rep_phone, rep_email, company_website);
 END //
@@ -50,7 +62,7 @@ delimiter ;
 
 -- creates a record for a new game
 delimiter //
-create procedure new_game(in title varchar(30), pub varchar(30), dev varchar(30), esrb varchar(3), price float, discount float, release_date date, max_spec varchar(250), min_spec varchar(250))
+create procedure new_game(in title varchar(100), pub varchar(100), dev varchar(100), esrb varchar(3), price float, discount float, release_date date, max_spec varchar(1000), min_spec varchar(1000))
 BEGIN
 DECLARE p,d int;
 SELECT PUBLISHER_ID into p from publisher where pub = p_company_name;
@@ -71,7 +83,7 @@ delimiter ;
 
 -- creates a record for a new dlc
 delimiter //
-create procedure new_dlc(in game_id char(9), dev varchar(30),title varchar(30), price float, discount float, release_date date)
+create procedure new_dlc(in game_id char(9), dev varchar(100),title varchar(100), price float, discount float, release_date date)
 BEGIN
 DECLARE d char(9);
 Select developer_id into d from developer where dev = d_company_name;
@@ -105,6 +117,17 @@ delimiter //
 create procedure send_message(in message_id int, recipient_id int)
 BEGIN
 insert into recipient values (message_id, recipient_id);
+END //
+delimiter ;
+
+-- retrieve unread messages
+delimiter //
+create procedure retrieve_messages(in recipient_id int)
+BEGIN
+select m_content, m_image_path, m_created_by, m_create_date from message
+join recipient using (message_id) 
+where recipient.cust_id = recipient_id and r_read = 0;
+update recipient set r_read = 1 where cust_id = recipient_id and r_read = 0;
 END //
 delimiter ;
 
@@ -226,36 +249,3 @@ FROM game
 join game_tag using (game_id)
 join tag using(tag_code)GROUP BY game_id;
 
--- testing 
-INSERT INTO customer values(null,'Roger','Lorelli','kain525','roger.lorelli@yahoo.com');
-
-select * from BasicCustInfo;
-
-select * from customer;
-
-insert into customer values(null,'Chris','Lorelli','cyclesurgeon','something@something.com');
-
-call create_message(1, "dude, where's my car?",null);
-
-call send_message(1,2);
-
-call create_publisher("BUNGIE",null,null,null);
-call create_developer("BUNGIE",null,null,null);
-call new_game("DESTINY 2","BUNGIE","BUNGIE","T",29.99,0, "2019-10-01", null,null);
-call new_game("DESTINY" , "ACTIVISION","BUNGIE","T",0,0, "2017-10-01",null,null);
-
-select * from gametaglist;
-
-insert into tag values (null, "Action");
-insert into tag values (null, "Adventure");
-insert into tag values (null, "RPG");
-insert into tag values (null, "Crafting");
-insert into tag values (null, "Strategy");
-
-insert into game_tag values(1,2);
-insert into game_tag values(3,2);
-insert into game_tag values(4,2);
-
-select * from game_tag;
-select * from recipient;
-select * from message;
