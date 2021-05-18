@@ -13,15 +13,18 @@ delimiter ;
 
 -- link account to platform
 delimiter //
-create procedure link_account(in cust_id int, platform varchar(10), alias varchar(15))
+create procedure link_account(in cust_id int, platform varchar(20), alias varchar(15))
 BEGIN
 declare l_sql_stmt varchar(1000);
-Set l_sql_stmt = CONCAT('UPDATE customer SET ' + platform + ' = ' + alias + ' where customer.cust_id = ' + cust_id);
+select CONCAT('UPDATE customer SET ',platform,' = \'',alias,'\' where customer.cust_id = ',cust_id) into @l_sql_stmt;
+
 prepare stmt from @l_sql_stmt;
 execute stmt;
 DEALLOCATE PREPARE stmt;
 END //
 delimiter ;
+
+-- call link_account(1, 'steam_alias', 'gaubanss');
 
 -- create new publisher entry
 delimiter //
@@ -41,9 +44,9 @@ delimiter ;
 
 -- query to return all games in a player's library based on system customer ID
 delimiter //
-create procedure retrievegamelibrary(IN id char(9))
+create procedure retrievegamelibrary(IN id int)
 BEGIN
-SELECT g_title from game
+SELECT game_id,g_title from basicgamelistcollection
 join game_library_entry using (game_id)
 join customer using (cust_id)
 where cust_id = id;
@@ -71,31 +74,67 @@ insert into game values (null,p,d,title,esrb,price,discount,release_date, max_sp
 END //
 delimiter ;
 
+-- link game to platform
+delimiter //
+create procedure link_game_platform(in game_id int, platform_num int, website varchar(100))
+BEGIN
+insert into game_platform values (null, game_id, platform_num,website);
+END //
+delimiter ;
+
+-- retrieve store links
+delimiter //
+create procedure get_store_links(in game_id int)
+BEGIN
+select plat_name, plat_website from game
+join game_platform using(game_id)
+where game.game_id = game_id;
+END //
+delimiter ;
+
 -- drop procedure new_game;
 
 -- adds a specified game, using game ID, to a specified user's library
 delimiter // 
-create procedure add_game(IN cus_id char(9), g_id char(9))
+create procedure add_game(IN cus_id int, g_id int,plat_num int ,exe_path varchar(1000))
 BEGIN  
-insert into game_library_entry values (cus_id,g_id);
+insert into game_library_entry values (cus_id,g_id,plat_num,exe_path, date(now()));
 END //
 delimiter ;
 
 -- creates a record for a new dlc
 delimiter //
-create procedure new_dlc(in game_id char(9), dev varchar(100),title varchar(100), price float, discount float, release_date date)
+create procedure new_dlc(in game_id int, dev varchar(100),title varchar(100), price float, discount float, release_date date)
 BEGIN
 DECLARE d char(9);
 Select developer_id into d from developer where dev = d_company_name;
-insert into game_dlc values (game_id, d,title, price, discount, release_date);
+insert into game_dlc values (null,game_id, d,title, price, discount, release_date);
 END //
 delimiter ;
 
 -- adds a specified dlc, using dlc ID, to a specified user's library
 delimiter // 
-create procedure add_dlc(IN cus_id char(9), dlc_id char(9))
+create procedure add_dlc(IN cus_id int, dlc_id int)
 BEGIN  
 insert into dlc_library_entry values (cus_id, dlc_id);
+END //
+delimiter ;
+
+-- get list of all dlc for a game
+delimiter //
+create procedure get_complete_dlc_list(in game_id int)
+BEGIN
+select dlc_id,dlc_title,DLC_PRICE,DLC_DISCOUNT,DLC_RELEASE_DATE from game_dlc where game_dlc.game_id = game_id;
+END //
+delimiter ;
+
+-- get list of dlc for game in library
+delimiter //
+create procedure get_dlc_library(in cust_id int, game_id int)
+BEGIN
+select dlc_title,DLC_RELEASE_DATE from game_dlc 
+join dlc_library_entry using (dlc_id)
+where dlc_library_entry.cust_id = cust_id and game_dlc.game_id = game_id;
 END //
 delimiter ;
 
@@ -141,7 +180,7 @@ delimiter ;
 
 -- add game to collection
 delimiter //
-create procedure collection_entry(in game_id int, collection_id int)
+create procedure add_collection_entry(in game_id int, collection_id int)
 BEGIN
 insert into collection_entry values (game_id, collection_id);
 END //
@@ -213,6 +252,23 @@ where cust_id = friend_id);
 END //
 delimiter ;
 
+-- retrieve tag id
+delimiter //
+create procedure get_tag_id(in tag_name varchar(15))
+BEGIN
+select tag_code from tag where tag.tag_name = tag_name;
+END //
+delimiter ;
+
+-- create new tag
+delimiter //
+create procedure create_tag(in tag_name varchar(15))
+BEGIN
+insert into tag values (null, tag_name);
+END //
+delimiter ;
+
+
 -- triggers
 
 -- updates the rating average of a game when a new review is written
@@ -239,13 +295,18 @@ CREATE VIEW BasicGameListCollection as select game_id, g_title from game;
 -- removes personal information that other players do not need to be able to see
 create view BasicCustInfo as select cust_id, cust_alias from customer; 
 
-create view FriendInfo as select cust_alias, steam_alias, epic_alias, uplay_alias, gog_alias, ea_alias from customer;
+create view AdvancedCustInfo as select cust_id, cust_alias, steam_alias, epic_alias, uplay_alias, gog_alias, ea_alias from customer;
 
-create view TrueNameFriendInfo as select cust_fname, cust_lname, cust_alias, cust_email from customer;
+create view TrueNameFriendInfo as select cust_fname, cust_lname, cust_alias from customer;
 
 
 create view GameTagList as SELECT game_id, g_title, GROUP_CONCAT(tag_name) as "tags" 
 FROM game 
 join game_tag using (game_id)
-join tag using(tag_code)GROUP BY game_id;
+join tag using(tag_code)
+GROUP BY game_id;
 
+create view PlatformList as Select game_id, g_title, group_concat(plat_name) as platforms
+From game_platform
+join game using (game_id) 
+GROUP BY game_id;
