@@ -7,7 +7,7 @@
 delimiter //
 create procedure create_cust_account (in fname varchar(15), lname varchar(15), alias varchar(15), email varchar(50))
 BEGIN
-insert into customer values(null, fname, lname, alias, '', '', '', '', '',email);
+insert into customer values(null, fname, lname, alias, '', '', '', '', '',email,date(now()));
 END //
 delimiter ;
 
@@ -70,7 +70,7 @@ BEGIN
 DECLARE p,d int;
 SELECT PUBLISHER_ID into p from publisher where pub = p_company_name;
 Select developer_id into d from developer where dev = d_company_name;
-insert into game values (null,p,d,title,esrb,price,discount,release_date, max_spec, min_spec, 0);
+insert into game values (null,p,d,title,esrb,price,discount,release_date, max_spec, min_spec, 0, date(now()));
 END //
 delimiter ;
 
@@ -108,7 +108,7 @@ create procedure new_dlc(in game_id int, dev varchar(100),title varchar(100), pr
 BEGIN
 DECLARE d char(9);
 Select developer_id into d from developer where dev = d_company_name;
-insert into game_dlc values (null,game_id, d,title, price, discount, release_date);
+insert into game_dlc values (null,game_id, d,title, price, discount, release_date,date(now()));
 END //
 delimiter ;
 
@@ -269,6 +269,23 @@ END //
 delimiter ;
 
 
+delimiter //
+create procedure publisher_sales(in pub_id int, start_date date, end_date date)
+BEGIN
+select publisher_id, p_company_name, start_date, end_date, count(game_id) from publisher
+join game using (publisher_id) where publisher_id = pub_id and date_added >= start_date and date_added <= end_date
+order by date_added asc;
+END //
+delimiter ;
+
+delimiter //
+create procedure get_publisher_library(in pub_id int)
+BEGIN
+select * from BasicGameListStore where publisher_id = pub_id
+order by g_title asc;
+END //
+delimiter ;
+
 -- triggers
 
 -- updates the rating average of a game when a new review is written
@@ -288,7 +305,7 @@ delimiter ;
 
 -- 
 
-CREATE VIEW BasicGameListStore AS SELECT game_id, g_title, g_esrb, g_price, g_avg_rating from game;
+CREATE VIEW BasicGameListStore AS SELECT game_id, g_title, g_esrb, g_price, g_avg_rating, developer_id, publisher_id from game;
 
 CREATE VIEW BasicGameListCollection as select game_id, g_title from game;
 
@@ -310,3 +327,4 @@ create view PlatformList as Select game_id, g_title, group_concat(plat_name) as 
 From game_platform
 join game using (game_id) 
 GROUP BY game_id;
+
