@@ -1,13 +1,19 @@
 -- use comp420project;
 
-
 -- procedures
 
 -- creates a new customer account
 delimiter //
-create procedure create_cust_account (in fname varchar(15), lname varchar(15), alias varchar(15), email varchar(50))
+create procedure create_cust_account (in fname varchar(15), lname varchar(15), alias varchar(15), email varchar(50),pass varchar(50))
 BEGIN
-insert into customer values(null, fname, lname, alias, '', '', '', '', '',email,date(now()));
+insert into customer values(null, fname, lname, alias, '', '', '', '', '',email,pass,date(now()));
+END //
+delimiter ;
+
+delimiter //
+create procedure sign_in (in email varchar(50), pass varchar(50))
+BEGIN
+select * from customer where customer.email = email and customer.pass = pass;
 END //
 delimiter ;
 
@@ -22,15 +28,13 @@ prepare stmt from @l_sql_stmt;
 execute stmt;
 DEALLOCATE PREPARE stmt;
 END //
-delimiter ;
-
--- call link_account(1, 'steam_alias', 'gaubanss');
+delimiter ;6
 
 -- create new publisher entry
 delimiter //
 create procedure create_publisher (in company_name varchar(100), rep_phone varchar(12), rep_email varchar(50), company_website varchar(50))
 BEGIN
-insert into publisher values(null, company_name, rep_phone, rep_email, company_website);
+insert into publisher values(null, company_name, rep_phone, rep_email, company_website,0);
 END //
 delimiter ;
 
@@ -38,7 +42,7 @@ delimiter ;
 delimiter //
 create procedure create_developer (in company_name varchar(100), rep_phone varchar(12), rep_email varchar(50), company_website varchar(50))
 BEGIN
-insert into developer values(null, company_name, rep_phone, rep_email, company_website);
+insert into developer values(null, company_name, rep_phone, rep_email, company_website,0);
 END //
 delimiter ;
 
@@ -70,7 +74,7 @@ BEGIN
 DECLARE p,d int;
 SELECT PUBLISHER_ID into p from publisher where pub = p_company_name;
 Select developer_id into d from developer where dev = d_company_name;
-insert into game values (null,p,d,title,esrb,price,discount,release_date, max_spec, min_spec, 0, date(now()));
+insert into game values (null,p,d,title,esrb,price,discount,release_date, max_spec, min_spec, 0, date(now()),0);
 END //
 delimiter ;
 
@@ -108,7 +112,7 @@ create procedure new_dlc(in game_id int, dev varchar(100),title varchar(100), pr
 BEGIN
 DECLARE d char(9);
 Select developer_id into d from developer where dev = d_company_name;
-insert into game_dlc values (null,game_id, d,title, price, discount, release_date,date(now()));
+insert into game_dlc values (null,game_id, d,title, price, discount, release_date,date(now()),0);
 END //
 delimiter ;
 
@@ -239,6 +243,13 @@ where cust_id = friend_id;
 END //
 delimiter ;
 
+delimiter //
+create procedure get_friends_list(in id int)
+BEGIN
+select * from friend where cust_id = id;
+END //
+delimiter ;
+
 -- retrieve list of games that both cust and friend own
 delimiter //
 create procedure get_shared_game_list(in friend_id int, cust_id int)
@@ -268,11 +279,10 @@ insert into tag values (null, tag_name);
 END //
 delimiter ;
 
-
 delimiter //
 create procedure publisher_sales(in pub_id int, start_date date, end_date date)
 BEGIN
-select publisher_id, p_company_name, start_date, end_date, count(game_id) from publisher
+select publisher_id, p_company_name, start_date, end_date, count(game_id) as sales from publisher
 join game using (publisher_id) where publisher_id = pub_id and date_added >= start_date and date_added <= end_date
 order by date_added asc;
 END //
@@ -285,6 +295,17 @@ select * from BasicGameListStore where publisher_id = pub_id
 order by g_title asc;
 END //
 delimiter ;
+
+delimiter //
+create procedure game_sales_report(in game_id int, start_date date, end_date date)
+BEGIN
+select game_id, g_title, count(game_id), start_date, end_date
+from (select game_id, g_title from game
+join game_library_entry using (game_id) 
+where game_library_entry.game_id = game_id and game_library_entry.date_added >= start_date and game_library_entry.date_added <= end_date) as g1
+order by g_title asc;
+END //
+delimiter;
 
 -- triggers
 
@@ -301,11 +322,45 @@ update game Set g_avg_rating = avg_rating where game.game_id = new.GAME_ID;
 END //
 delimiter ; 
 
+delimiter //
+create trigger game_counter
+AFTER 
+INSERT ON game_library_entry
+FOR EACH ROW
+BEGIN
+declare count int;
+select counter into count from game where game.game_id = new.game_id;
+update game set counter = count + 1 where game.game_id = new.game_id;
+END //
+delimiter ;
+
+delimiter //
+create trigger dlc_counter
+AFTER 
+INSERT ON dlc_library_entry
+FOR EACH ROW
+BEGIN
+declare count int;
+select counter into count from game_dlc where game_dlc.dlc_id = new.dlc_id;
+update game_dlc set counter = count + 1 where game_dlc.dlc_id = new.dlc_id;
+END //
+delimiter ;
+
+delimiter //
+create trigger pub_dev_counter
+AFTER 
+INSERT on game
+for each row
+begin
+declare count int;
+select counter into count from publisher where publisher.PUBLISHER_ID = new.PUBLISHER_ID;
+update publisher set counter = count + 1 where publisher.PUBLISHER_ID = new.PUBLISHER_ID;
+select counter into count from developer where developer.developer_ID = new.developer_ID;
+update developer set counter = count + 1 where developer.developer_ID = new.developer_ID;
+END //
+delimiter ;
+
 -- views
-
--- 
-
-CREATE VIEW BasicGameListStore AS SELECT game_id, g_title, g_esrb, g_price, g_avg_rating, developer_id, publisher_id from game;
 
 CREATE VIEW BasicGameListCollection as select game_id, g_title from game;
 
@@ -316,8 +371,7 @@ create view AdvancedCustInfo as select cust_id, cust_alias, steam_alias, epic_al
 
 create view TrueNameFriendInfo as select cust_fname, cust_lname, cust_alias from customer;
 
-
-create view GameTagList as SELECT game_id, g_title, GROUP_CONCAT(tag_name) as "tags" 
+create view BasicGameListStore as SELECT game_id, g_title, g_esrb, g_price, g_avg_rating, developer_id, publisher_id, GROUP_CONCAT(tag_name) as "tags" 
 FROM game 
 join game_tag using (game_id)
 join tag using(tag_code)
@@ -328,3 +382,6 @@ From game_platform
 join game using (game_id) 
 GROUP BY game_id;
 
+create view TotalPubGames as select publisher_id, p_company_name, counter as 'Games in Database' from publisher;
+create view TotalDevGames as select developer_id, d_company_name, counter as 'Games in Database' from developer;
+create view TotalGameCopies as select game_id, g_title, counter as "Number of Copies Sold" from game;
