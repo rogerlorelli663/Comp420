@@ -213,7 +213,7 @@ delimiter ;
 delimiter //
 create procedure add_friend(in cust_id int, friend_id int)
 BEGIN
-insert into friend values (cust_id, friend_id, '0','0');
+insert into friend values (cust_id, friend_id, false,false);
 END //
 delimiter ;
 
@@ -221,15 +221,15 @@ delimiter ;
 delimiter //
 create procedure update_friend_share(in cust_id int, friend_id int, setting char(1))
 BEGIN
-update friend Set f_share_setting = setting where friend.cust_id = cust_id and friend.friend_id = friend_id;
+update friend Set f_share_setting = setting where friend.friend_id = cust_id and friend.cust_id = friend_id;
 END //
 delimiter ;
 
 -- update friend real name setting
 delimiter //
-create procedure update_friend_rn(in cust_id int, friend_id int, real_name char(1))
+create procedure update_friend_rn(in cust_id int, friend_id int, real_name bool)
 BEGIN
-update friend Set f_real_name = real_name where friend.cust_id = cust_id and friend.friend_id = friend_id;
+update friend Set f_real_name = real_name where friend.friend_id = cust_id and friend.cust_id = friend_id;
 END //
 delimiter ;
 
@@ -246,7 +246,18 @@ delimiter ;
 delimiter //
 create procedure get_friends_list(in id int)
 BEGIN
-select * from friend where cust_id = id;
+select friend_id, cust_alias, steam_alias, epic_alias, uplay_alias, gog_alias, ea_alias, F_SHARE_SETTING,F_REAL_NAME from AdvancedCustInfo
+join friend on friend.friend_id = AdvancedCustInfo.cust_id
+where friend.cust_id = id;
+END //
+delimiter ;
+
+delimiter //
+create procedure get_RLfriends_list(in id int)
+BEGIN
+select friend_id, cust_fname, cust_lname from TrueNameFriendInfo
+join friend on friend.friend_id = TrueNameFriendInfo.cust_id
+where friend.cust_id = id and friend.F_REAL_NAME = '1';
 END //
 delimiter ;
 
@@ -369,7 +380,7 @@ create view BasicCustInfo as select cust_id, cust_alias from customer;
 
 create view AdvancedCustInfo as select cust_id, cust_alias, steam_alias, epic_alias, uplay_alias, gog_alias, ea_alias from customer;
 
-create view TrueNameFriendInfo as select cust_fname, cust_lname, cust_alias from customer;
+create view TrueNameFriendInfo as select cust_id, cust_fname, cust_lname, cust_alias from customer;
 
 create view BasicGameListStore as SELECT game_id, g_title, g_esrb, g_price, g_avg_rating, developer_id, publisher_id, GROUP_CONCAT(tag_name) as "tags" 
 FROM game 
