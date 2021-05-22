@@ -1,25 +1,12 @@
-from Account import Account
-from Customer import Customer
-from Game import Game
-from Unigames import UniGames
+from Commands.RetrieveAccountCommand import RetrieveAccountCommand
+from Window import Window
 
 
-class MainScreen:
+class MainScreen(Window):
     personal_account = None
 
     def __init__(self, customer):
-        database = UniGames.database
-        d_library = database.execute(f"retrievegamelibrary({customer.CUST_ID});")
-        d_friends = database.execute(f"get_friends_list({customer.CUST_ID})")
-        library = []
-        friends = []
-        if d_library is not None:
-            for d_game in d_library:
-                library.append(Game(d_game[0], d_game[1]))
-        if d_friends is not None:
-            for d_friend in d_friends:
-                friends.append(Customer(d_friend[0], d_friend[1]))
-        MainScreen.personal_account = Account(customer, library, friends)
+        MainScreen.personal_account = RetrieveAccountCommand(customer)
 
     def display_personal_library(self):
         # shows list of owned games
@@ -42,4 +29,7 @@ class MainScreen:
 
     def display_message_screen(self):
         # display friends and messages
+        pass
+
+    def close(self):
         pass

@@ -1,8 +1,8 @@
-from MainScreen import MainScreen
-from Unigames import UniGames
+from Commands.LoginCommand import LoginCommand
+from Window import Window
 
 
-class LoginScreen:
+class LoginScreen(Window):
     def __init__(self):
         self.__display_login_window()
         self.is_enabled = True
@@ -17,12 +17,9 @@ class LoginScreen:
         pass
 
     def login(self):
-        email = None
-        password = None
+        email = ""
+        password = ""
+        isLoggedIn = LoginCommand(email, password)
 
-        database = UniGames.database
-        login = database.execute(f"sign_in({email}, {password});")
-        if login is not None and login:
-            UniGames.open_window_screen(MainScreen(login[0]))
-        else:
-            self.__display_invalid_login_window()
+    def close(self):
+        pass
