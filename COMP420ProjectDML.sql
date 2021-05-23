@@ -2,18 +2,21 @@
 
 -- procedures
 
+
+
+delimiter //
+create procedure sign_in(in email varchar(50), pass varchar(50))
+BEGIN
+select * from customer where cust_email = email and customer.pass = pass;
+END //
+delimiter ;
+
 -- creates a new customer account
 delimiter //
 create procedure create_cust_account (in fname varchar(15), lname varchar(15), alias varchar(15), email varchar(50),pass varchar(50))
 BEGIN
 insert into customer values(null, fname, lname, alias, '', '', '', '', '',email,pass,date(now()));
-END //
-delimiter ;
-
-delimiter //
-create procedure sign_in (in email varchar(50), pass varchar(50))
-BEGIN
-select * from customer where customer.email = email and customer.pass = pass;
+-- call sign_in(email,pass);
 END //
 delimiter ;
 
@@ -103,7 +106,6 @@ delimiter //
 create procedure add_game(IN cus_id int, g_id int,plat_num int ,exe_path varchar(1000))
 BEGIN  
 insert into game_library_entry values (cus_id,g_id,plat_num,exe_path, date(now()));
-select * from basicgamelistcollection where game_id = g_id;
 END //
 delimiter ;
 
@@ -122,7 +124,6 @@ delimiter //
 create procedure add_dlc(IN cus_id int, dlc_id int)
 BEGIN  
 insert into dlc_library_entry values (cus_id, dlc_id);
-select dlc_id from game_dlc where game_dlc.DLC_ID = dlc_id;
 END //
 delimiter ;
 
@@ -161,7 +162,7 @@ delimiter ;
 delimiter //
 create procedure send_message(in message_id int, recipient_id int)
 BEGIN
-insert into recipient values (message_id, recipient_id);
+insert into recipient values (message_id, recipient_id,0);
 END //
 delimiter ;
 

@@ -1,14 +1,13 @@
 from Database import Database
-from LoginScreen import LoginScreen
-from WindowStateManager import WindowStateManager
+from SessionStateManager import SessionStateManager
 
 
 class UniGames:
-    database = None
+    database = Database("localhost", "root", "xSAp2]!(9#iu", "COMP420Project")
 
     def __init__(self):
-        UniGames.database = Database("", "", "", "")
-        window_manager = WindowStateManager(LoginScreen())
+        session_manager = SessionStateManager()
+
 
 if __name__ == '__main__':
     app = UniGames()

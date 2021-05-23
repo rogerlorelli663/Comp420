@@ -30,5 +30,9 @@ class LoginScreen(Window):
         else:
             self.__display_invalid_login_window()
 
+    def createBtn(self):
+        self.reset()
+        sm.current = "create"
+
     def close(self):
         pass

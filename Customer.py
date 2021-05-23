@@ -1,14 +1,14 @@
 
 
 class Customer:
-    def __init__(self, ident, alias):
+    def __init__(self, ident, alias, fname, lname, steam, epic, uplay, gog, ea):
         self.ident = ident
         self.alias = alias
-        self.steam_alias = None
-        self.epic_alias = None
-        self.uplay_alias = None
-        self.gog_alias = None
-        self.ea_alias = None
-        self.cust_fname = None
-        self.cust_lname = None
+        self.steam_alias = steam
+        self.epic_alias = epic
+        self.uplay_alias = uplay
+        self.gog_alias = gog
+        self.ea_alias = ea
+        self.cust_fname = fname
+        self.cust_lname = lname
 
