@@ -1,6 +1,6 @@
 from Commands.Command import Command
 from Customer import Customer
-from MainScreen import MainScreen
+from MainWindow import MainWindow
 from Unigames import UniGames
 from SessionStateManager import SessionStateManager
 

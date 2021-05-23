@@ -13,7 +13,7 @@ class LoginWindow(Window):
         super().__init__()
         self.kivy = Builder.load_file("login.kv")
 
-        screens = [LoginScreen(name="login"), CreateAccountWindow(name="create")]
+        screens = [LoginScreen(name="login"), CreateAccountScreen(name="create")]
         for screen in screens:
             self.sm.add_widget(screen)
         self.sm.current = "login"
@@ -39,5 +39,5 @@ class LoginScreen(Screen):
         pass
 
 
-class CreateAccountWindow(Screen):
+class CreateAccountScreen(Screen):
     pass
