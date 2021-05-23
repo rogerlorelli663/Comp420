@@ -6,7 +6,7 @@ class UniGames:
     database = None
 
     def __init__(self):
-        UniGames.database = Database("", "", "", "")
+        UniGames.database = Database("localhost", "root", "", "COMP420Project")
         session_manager = SessionStateManager()
 
 

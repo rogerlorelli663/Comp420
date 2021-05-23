@@ -2,11 +2,11 @@ from Commands.RetrieveAccountCommand import RetrieveAccountCommand
 from Window import Window
 
 
-class MainScreen(Window):
+class MainWindow(Window):
     personal_account = None
 
     def __init__(self, customer):
-        MainScreen.personal_account = RetrieveAccountCommand(customer)
+        MainWindow.personal_account = RetrieveAccountCommand(customer)
 
     def display_personal_library(self):
         # shows list of owned games

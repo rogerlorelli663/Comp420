@@ -14,7 +14,7 @@ class LoginCommand(Command):
         database = UniGames.database
         login = database.execute(f"call sign_in({self.__email}, {self.__password});")
         if login is not None and login:
-            SessionStateManager.open_window_screen(MainScreen(Customer(login[0], login[3])))
+            SessionStateManager.open_window_screen(MainWindow(Customer(login[0], login[3])))
             return True
         else:
             return False
