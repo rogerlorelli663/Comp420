@@ -7,5 +7,3 @@ class Game:
         self.esrb = esrb
         self.price = price
         self.avg_rating = avg_rating
-
-

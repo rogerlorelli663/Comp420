@@ -1,19 +1,14 @@
 from Database import Database
 from LoginScreen import LoginScreen
+from WindowStateManager import WindowStateManager
 
 
 class UniGames:
     database = None
-    __current_window = None
 
     def __init__(self):
         UniGames.database = Database("", "", "", "")
-        self.open_window_screen(LoginScreen())
+        window_manager = WindowStateManager(LoginScreen())
 
-    @staticmethod
-    def open_window_screen(window):
-        __current_window = window
-
-
-if __name__ is '__main__':
+if __name__ == '__main__':
     app = UniGames()

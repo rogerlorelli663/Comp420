@@ -103,6 +103,7 @@ delimiter //
 create procedure add_game(IN cus_id int, g_id int,plat_num int ,exe_path varchar(1000))
 BEGIN  
 insert into game_library_entry values (cus_id,g_id,plat_num,exe_path, date(now()));
+select * from basicgamelistcollection where game_id = g_id;
 END //
 delimiter ;
 
@@ -121,6 +122,7 @@ delimiter //
 create procedure add_dlc(IN cus_id int, dlc_id int)
 BEGIN  
 insert into dlc_library_entry values (cus_id, dlc_id);
+select dlc_id from game_dlc where game_dlc.DLC_ID = dlc_id;
 END //
 delimiter ;
 

@@ -1,8 +1,11 @@
+from Customer import Customer
 from MainScreen import MainScreen
 from Unigames import UniGames
+from Window import Window
+from WindowStateManager import WindowStateManager
 
 
-class LoginScreen:
+class LoginScreen(Window):
     def __init__(self):
         self.__display_login_window()
         self.is_enabled = True
@@ -21,8 +24,11 @@ class LoginScreen:
         password = None
 
         database = UniGames.database
-        login = database.execute(f"sign_in({email}, {password});")
+        login = database.execute(f"call sign_in({email}, {password});")
         if login is not None and login:
-            UniGames.open_window_screen(MainScreen(login[0]))
+            WindowStateManager.open_window_screen(MainScreen(Customer(login[0], login[3])))
         else:
             self.__display_invalid_login_window()
+
+    def close(self):
+        pass
