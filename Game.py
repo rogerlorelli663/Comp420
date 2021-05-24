@@ -1,7 +1,7 @@
 
 
 class Game:
-    def __init__(self, ident, title, esrb="", price=-1, avg_rating=""):
+    def __init__(self, ident, title, esrb, price, avg_rating):
         self.ident = ident
         self.title = title
         self.esrb = esrb

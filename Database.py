@@ -24,9 +24,16 @@ class Database:
     def execute(self, sql_command):
         try:
             self.__cursor.execute(sql_command)
-            #self.__database.commit()
             result = self.__cursor.fetchall()
             return result
+        except:
+            logging.error(f"Could not resolve sql command {sql_command}")
+            return None
+
+    def execute_commit(self, sql_command):
+        try:
+            self.__cursor.execute(sql_command)
+            self.__database.commit()
         except:
             self.__database.rollback()
             logging.error(f"Could not resolve sql command {sql_command}")

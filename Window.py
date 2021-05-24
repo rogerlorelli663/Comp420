@@ -8,10 +8,11 @@ class WindowManager(ScreenManager):
 
 class Window(App):
     kivy = None
-    sm = WindowManager()
+    #sm = WindowManager()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.sm = WindowManager()
 
     def build(self):
         return self.sm

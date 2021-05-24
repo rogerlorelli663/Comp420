@@ -16,9 +16,7 @@ class LoginCommand(Command):
         login = database.execute(sql)
 
         if login is not None and login:
-            main = None
-            SessionStateManager.open_window_screen(main=MainWindow())
-            main.load_account(Customer(login[0][0], login[0][3], login[0][1], login[0][2], login[0][4],login[0][5],login[0][6],login[0][7],login[0][8]))
+            SessionStateManager.open_window_screen(MainWindow(Customer(login[0][0], login[0][3], login[0][1], login[0][2], login[0][4],login[0][5],login[0][6],login[0][7],login[0][8])))
             return True
         else:
             return False

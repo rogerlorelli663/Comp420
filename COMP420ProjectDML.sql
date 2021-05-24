@@ -217,6 +217,7 @@ delimiter //
 create procedure add_friend(in cust_id int, friend_id int)
 BEGIN
 insert into friend values (cust_id, friend_id, false,false);
+insert into friend values (friend_id, cust_id, false,false);
 END //
 delimiter ;
 

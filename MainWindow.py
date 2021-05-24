@@ -6,13 +6,12 @@ from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 
-
-
+personal_account = None
 
 class MainWindow(Window):
-    personal_account = None
-
-    def __init__(self):
+    def __init__(self,customer):
+        global personal_account
+        personal_account = RetrieveAccountCommand(customer).execute()
         super().__init__()
         self.kivy = Builder.load_file("main.kv")
 
@@ -21,17 +20,19 @@ class MainWindow(Window):
             self.sm.add_widget(screen)
         self.sm.current = "main"
 
-    def load_account(self,customer):
-        self.personal_account = RetrieveAccountCommand(customer)
-
     def close(self):
         pass
 
-class MainScreen(Window):
+class MainScreen(Screen):
+    alias = ObjectProperty(None)
 
     def __init__(self, window, **kw):
         super().__init__(**kw)
         self.window = window
+
+    def on_enter(self, *args):
+        global personal_account
+        self.alias.text = "Alias: " + personal_account.customer.alias
 
     def display_personal_library(self):
         # shows list of owned games

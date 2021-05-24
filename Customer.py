@@ -1,7 +1,7 @@
 
 
 class Customer:
-    def __init__(self, ident, alias, fname, lname, steam, epic, uplay, gog, ea):
+    def __init__(self, ident, alias, steam, epic, uplay, gog, ea, fname, lname):
         self.ident = ident
         self.alias = alias
         self.steam_alias = steam
