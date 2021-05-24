@@ -5,7 +5,7 @@ import os
 platforms =  ['STEAM','UPLAY','GOG','EA','EPIC']
 
 class UniGames:
-    database = Database("localhost", "root", "xSAp2]!(9#iu", "COMP420Project")
+    database = Database("localhost", "manager123", "password", "COMP420Project")
     account = None
     def __init__(self):
         value = None
@@ -71,27 +71,75 @@ class UniGames:
             print("Please choose from the following options: [0-2]")
             value = int(input(f'1. View Library\n'
                               f'2. View Collections\n'
-                              f'3. Add Game\n'
                               f'0. Back\n'))
             if value == 1:
-                games = self.account.owned_games
-                i = 1
-                print('Games Library:\n')
-                for game in games:
-                    print(f'#{i}   {game.title}: {game.esrb}  {game.avg_rating}\n')
-                    i = i + 1
+                self.DisplayLibrary()
+                print("Please choose from the following options: [0-2]")
+                value = int(input(f'1. Add Game\n'
+                                  f'0. Back\n'))
+                if value == 1:
+                    self.AddGame()
             elif value == 3:
                 self.AddGame()
+            elif value == 4:
+                self.ReviewGame()
+
+    def SelectGame(self, game_code):
+        print(f'ID\tTitle\tCode\tESRB\tRating\tPath\n')
+        print(f'{self.account.owned_games[game_code].ident}  {self.account.owned_games[game_code].title}: {self.account.owned_games[game_code].ident} {self.account.owned_games[game_code].esrb}  {self.account.owned_games[game_code].avg_rating} {self.account.owned_games[game_code].path}\n')
+        choice = input('\nReview Game: Y/N?')
+        if choice != "N":
+            self.ReviewGame(game_code)
+
+
+    def DisplayLibrary(self):
+        choice = None
+        while choice != -1:
+            games = self.account.owned_games
+            i = 1
+            print('Games Library:\n')
+            for game in games:
+                print(f'#{i} {game.title}: {game.esrb}  {game.avg_rating}\n')
+                i = i + 1
+            choice = int(input("Select Game: 0 to go back"))
+            choice = choice - 1
+            if choice != -1:
+                self.SelectGame(choice)
+
+
+
+    def ReviewGame(self,game_code):
+        os.system('cls')
+        print(f'Review: {self.account.owned_games[game_code].title}\n')
+        message = input("Message: ")
+        rating = int(input("Score (0-10): "))
+        CreateReviewCommand(self.account.customer.ident,self.account.owned_games[game_code].ident,rating,message).execute()
+
+
+
 
     def AddGame(self):
-        value = int(input("Enter Game Code: "))
+        game = int(input("Enter Game Code: "))
         path = input("Executable Path: ")
         print("Platform Number: \n")
         for i in range(0,len(platforms)):
             print(f'{i + 1}: {platforms[i]}')
         plat = int(input('\n'))
-        AddGameToLibraryCommand(self.account.customer.ident, value,plat,path).execute()
+        AddGameToLibraryCommand(self.account.customer.ident, game,plat,path).execute()
         self.account = RetrieveAccountCommand(self.account.customer).execute()
+        value = input('Add DLC: Y/N?')
+        while value != 'N':
+            self.AddDLC(game)
+
+    def AddDLC(self,game_code):
+        dlcs = RetrieveDlcGamesCommand(game_code).execute()
+        if len(dlcs) > 0:
+            for dlc in dlcs:
+                print(dlc + '\n')
+            dlc_code = int(input("DLC Code:"))
+            AddDlcToLibraryCommand(self.account.customer.ident, dlc_code).execute()
+        else:
+            print("No DLC for this title\n")
 
     def Friends(self):
         os.system('cls')

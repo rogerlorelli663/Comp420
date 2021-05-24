@@ -180,7 +180,7 @@ class RetrieveAccountCommand(Command):
 
     def execute(self):
         database = UniGames.database
-        sql = f'SELECT game_id, g_title, g_esrb, g_price, g_avg_rating from game join game_library_entry using (game_id) ' \
+        sql = f'SELECT game_id, g_title, g_esrb, g_price, g_avg_rating, exe_path from game join game_library_entry using (game_id) ' \
               f'join customer using (cust_id) where cust_id = {self.customer.ident}'
         d_library = database.execute(sql)
         sql = f'select friend_id, cust_alias, steam_alias, epic_alias, uplay_alias, gog_alias, ea_alias, F_SHARE_SETTING,F_REAL_NAME from AdvancedCustInfo ' \
@@ -190,7 +190,7 @@ class RetrieveAccountCommand(Command):
         friends = []
         if d_library is not None:
             for d_game in d_library:
-                library.append(Game(d_game[0], d_game[1],d_game[2], d_game[3], d_game[4]))
+                library.append(Game(d_game[0], d_game[1],d_game[2], d_game[3], d_game[4], d_game[5]))
         if d_friends is not None:
             for d_friend in d_friends:
                 customer = Customer(d_friend[0], d_friend[1], d_friend[2], d_friend[3], d_friend[4], d_friend[5], d_friend[6]," ", " ")
@@ -204,7 +204,7 @@ class RetrieveDlcGamesCommand(Command):
 
     def execute(self):
         database = UniGames.database
-        return database.execute(f"call get_completed_dlc_list({self.game_id});")
+        return database.execute(f'select dlc_id,dlc_title,DLC_PRICE,DLC_DISCOUNT,DLC_RELEASE_DATE from game_dlc where game_dlc.game_id = {self.game_id};')
 
 
 class RetrieveLibraryDlcGameCommand(Command):
@@ -287,7 +287,7 @@ class CreateReviewCommand(Command):
     def execute(self):
         from Unigames import UniGames
         database = UniGames.database
-        database.execute_commit(f"call create_review({self.cust_id}, {self.game_id}, {self.rating}, {self.message})")
+        database.execute_commit(f"call create_review({self.cust_id}, {self.game_id}, {self.rating}, \'{self.message}\')")
 
 
 class AddFriendCommand(Command):
